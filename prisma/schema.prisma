@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model Snippet {
+  id      Int    @id @default(autoincrement())
+  title   String
+  code    String
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  snippets  Snippet[]
+}
+
+
+
+
+
+
+
+
+
+
