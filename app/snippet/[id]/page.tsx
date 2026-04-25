@@ -12,11 +12,14 @@ import React from 'react'
 
 const SnippetDetailPage = async ({
   params,
+  searchParams,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string; userId?: string }>;
 }) => {
 
   const id = parseInt((await params).id);
+  const { from, userId } = await searchParams;
   const cookieStore = await cookies();
   const userCookie = cookieStore.get("user");
   let loggedInUser = userCookie ? JSON.parse(userCookie.value) : null;
@@ -36,13 +39,18 @@ const SnippetDetailPage = async ({
   const isOwner = loggedInUser && loggedInUser.id === snippet.userId;
 
 
+  // Dynamic back path logic
+  const backPath = (from === 'profile' && userId) 
+    ? `/profile/${userId}` 
+    : "/";
+
   return (
     <div className='container mx-auto'>
 
       <Button variant="ghost" asChild className="mb-8 text-orange-500">
-        <Link href="/">
+        <Link href={backPath}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to home
+          {from === 'profile' ? "Back to Profile" : "Back to Home"}
         </Link>
       </Button>
 

@@ -9,6 +9,8 @@ export async function createSnippetAction(formData: FormData) {
     const title = formData.get("title") as string;
     const code = formData.get("code") as string;
 
+    const from = formData.get("from") as string;
+    const userId = formData.get("userId") as string;
     // getting user from cookies
     const cookieStore = await cookies();
     const userCookie = cookieStore.get("user");
@@ -34,11 +36,14 @@ export async function createSnippetAction(formData: FormData) {
     }
 
 
-    // revalidatePath ensures the Home page shows the new snippet immediately
     revalidatePath("/");
 
-    // Move redirect OUTSIDE the try/catch block
-    redirect("/");
+    // Decide redirect based on where they came from
+    if (from === "profile" && userId) {
+        redirect(`/profile/${userId}`);
+    } else {
+        redirect("/");
+    }
 }
 
 

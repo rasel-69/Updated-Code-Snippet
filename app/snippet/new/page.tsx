@@ -9,12 +9,22 @@ import Link from 'next/link'
 import React, { useState } from 'react'
 import hljs from 'highlight.js'
 import { createSnippetAction } from '@/lib/snippet-action' // our server action
+import { useSearchParams } from 'next/navigation';
 
 const CreateSnippetPage = () => {
     const [error, setError] = useState("");
     const [isPending, setIsPending] = useState(false);
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) { 
+    const searchParams = useSearchParams();
+    const from = searchParams.get('from');
+    const userId = searchParams.get('userId');
+
+    // Dynamic back path
+    const backPath = (from === 'profile' && userId)
+        ? `/profile/${userId}`
+        : "/";
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError("");
 
@@ -31,7 +41,7 @@ const CreateSnippetPage = () => {
             return;
         }
 
-        
+
 
         setIsPending(true);
         // Call the server action
@@ -50,13 +60,15 @@ const CreateSnippetPage = () => {
     return (
         <div>
             <Button variant="ghost" asChild className="mb-8 text-orange-500">
-                <Link href="/">
+                <Link href={backPath}>
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Home
+                    {from === 'profile' ? "Back to Profile" : "Back to Home"}
                 </Link>
             </Button>
 
             <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
+                <input type="hidden" name="from" value={from || ""} />
+                <input type="hidden" name="userId" value={userId || ""} />
                 <div>
                     <Label className='mb-2 text-xl'>Title</Label>
                     <Input type="text" id="title" name="title" required />
