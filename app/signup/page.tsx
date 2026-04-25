@@ -91,7 +91,7 @@ export default function SignupPage() {
                 onSubmit={handleSubmit}
                 className="container mx-auto w-96 border text-center rounded-2xl p-4 flex flex-col gap-4"
             >
-                <h1 className="mb-2 font-semibold text-green-500">Please Sign Up</h1>
+                <h1 className="mb-2 font-semibold text-xl text-green-500">Please Sign Up</h1>
 
                 <div>
                     <Label>Name</Label>

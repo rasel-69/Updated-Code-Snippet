@@ -1,5 +1,7 @@
 
 
+import CommentForm from '@/components/CommentForm'
+import CommentItem from '@/components/CommentItem'
 import DeleteSnippetButton from '@/components/DeleteSnippetButton'
 import { Button } from '@/components/ui/button'
 import prisma from '@/lib/db'
@@ -15,27 +17,23 @@ const SnippetDetailPage = async ({
 }) => {
 
   const id = parseInt((await params).id);
-
-  // Getting Logged In user 
   const cookieStore = await cookies();
   const userCookie = cookieStore.get("user");
-  let loggedInUser = userCookie ? JSON.parse(userCookie.value) : null; //user cookie thakle value ta nibo na hole null;
-
-
+  let loggedInUser = userCookie ? JSON.parse(userCookie.value) : null;
 
   const snippet = await prisma.snippet.findUnique({
-    where: {
-      id,
+    where: { id },
+    include: {
+      comments: {
+        where: { parentId: null }, // Fetch only top-level
+        include: { user: true, replies: { include: { user: true } } },
+        orderBy: { createdAt: 'desc' }
+      }
     }
-  })
+  });
 
-  if (!snippet) {
-    return <h1 className='text-red-500'>Snippet Not found</h1>
-  }
-
-
-  //checking the owneship of snippet je logged in user ar created snippet naki ?
-  const isOwner = loggedInUser && loggedInUser.id === snippet.userId
+  if (!snippet) return <h1>Not found</h1>;
+  const isOwner = loggedInUser && loggedInUser.id === snippet.userId;
 
 
   return (
@@ -72,6 +70,42 @@ const SnippetDetailPage = async ({
           {snippet.code}
         </code>
       </pre>
+
+
+
+
+      <section className="mt-12">
+        <h2 className="text-xl font-bold mb-4">Comments</h2>
+        {loggedInUser ? <CommentForm snippetId={snippet.id} /> : <p>Login to comment</p>}
+
+        <div className="mt-8 flex flex-col gap-8">
+          {snippet.comments.map((comment) => (
+            <div key={comment.id} className="border-l-4 border-orange-200 pl-4 py-2">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-orange-600">{comment.user.name}</span>
+                <span className="text-xs text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
+              </div>
+
+              <CommentItem comment={comment} snippetId={snippet.id} currentUserId={loggedInUser?.id} />
+
+              {/* Reply Form */}
+              {loggedInUser && <CommentForm snippetId={snippet.id} parentId={comment.id} placeholder="Reply..." />}
+
+              {/* Replies List */}
+              <div className="ml-8 mt-4 flex flex-col gap-4">
+                {comment.replies.map((reply) => (
+                  <div key={reply.id} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-sm">{reply.user.name}</span>
+                    </div>
+                    <CommentItem comment={reply} snippetId={snippet.id} currentUserId={loggedInUser?.id} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
 
     </div>

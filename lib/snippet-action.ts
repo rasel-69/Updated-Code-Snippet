@@ -9,7 +9,7 @@ export async function createSnippetAction(formData: FormData) {
     const title = formData.get("title") as string;
     const code = formData.get("code") as string;
 
-    // 1. Get user from cookies
+    // getting user from cookies
     const cookieStore = await cookies();
     const userCookie = cookieStore.get("user");
 
@@ -19,7 +19,7 @@ export async function createSnippetAction(formData: FormData) {
 
     const user = JSON.parse(userCookie.value);
 
-    // 2. Database Operation
+    // for database operation
     try {
         await prisma.snippet.create({
             data: {

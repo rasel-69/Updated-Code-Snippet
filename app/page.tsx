@@ -58,14 +58,14 @@ export default async function Home() {
           <h1 className="font-semibold text-orange-500">Snippets</h1>
 
           {user ? (
-            /* Logged in: Go straight to create page */
+            /* jodi logged in hoi then go to create page  */
             <Link href="/snippet/new">
               <Button className="bg-green-400 text-black w-24">
                 Create New
               </Button>
             </Link>
           ) : (
-            /* Not logged in: Redirect to login first */
+            /* Not logged go to login first */
             <Link href="/login?callbackUrl=/snippet/new">
               <Button variant="outline" className="border-green-400 text-orange-500">
                 Create New
