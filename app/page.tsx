@@ -1,3 +1,4 @@
+import NotificationBell from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/db";
 import { signout } from "@/lib/logout-action";
@@ -10,14 +11,21 @@ import Link from "next/link";
 export default async function Home() {
 
   const snippets = await prisma.snippet.findMany();
-
   const cookieStore = await cookies();
   const userCookie = cookieStore.get("user");
 
   let user = null;
+  let notifications: any[] = [];
+
   if (userCookie) {
     try {
       user = JSON.parse(userCookie.value);
+      // Fetch notifications for the logged-in user
+      notifications = await prisma.notification.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      });
     } catch { }
   }
 
@@ -26,31 +34,33 @@ export default async function Home() {
 
   return (
     <div>
-      <nav className="flex items-center justify-between bg-gray-100 h-14 mb-8 rounded">
-        <h1 className="font-semibold text-2xl">Home</h1>
+      <nav className="flex items-center justify-between bg-gray-100 h-16 px-4 mb-8 rounded shadow-sm">
+        <h1 className="font-bold text-2xl text-orange-600">SnippetApp</h1>
 
-         <h1 className="font-semibold text-2xl">
-          {
-            user? <p>{user.name}</p>: <p></p>
-          }
-         </h1>
-        <div className="flex gap-2">
-          {user ? (
-            /* Use a form with a Server Action instead of a Link */
-            <form action={signout}>
-              <Button variant="destructive" type="submit">
-                Sign Out
-              </Button>
-            </form>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button>Login</Button>
+        <div className="flex items-center gap-6">
+          {user && <NotificationBell notifications={notifications} />}
+
+          <div className="text-sm font-medium hover:text-orange-600 transition-colors">
+            {user ? (
+              <Link href={`/profile/${user.id}`} className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center text-orange-700">
+                  {user.name[0]}
+                </div>
+                <span>{user.name}</span>
               </Link>
-            </>
-          )}
+            ) : (
+              ""
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            {user ? (
+              <form action={signout}><Button variant="destructive" type="submit">Sign Out</Button></form>
+            ) : (
+              <Link href="/login"><Button>Login</Button></Link>
+            )}
+          </div>
         </div>
-        
       </nav>
 
       <div className="flex flex-col gap-4">

@@ -74,7 +74,7 @@ const SnippetDetailPage = async ({
 
 
 
-      <section className="mt-12">
+      <section id="comments" className="mt-12">
         <h2 className="text-xl font-bold mb-4">Comments</h2>
         {loggedInUser ? <CommentForm snippetId={snippet.id} /> : <p>Login to comment</p>}
 

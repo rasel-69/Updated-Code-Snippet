@@ -17,6 +17,7 @@ model Snippet {
   userId    String
   user      User      @relation(fields: [userId], references: [id])
   comments  Comment[]
+  notifications Notification[]
 }
 
 model Comment {
@@ -43,8 +44,28 @@ model User {
   password String?   // <--- Make sure this line exists
   snippets Snippet[]
   comments Comment[]
+  notifications Notification[] @relation("ReceivedNotifications")
 }
 
+
+
+
+model Notification {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  isRead      Boolean  @default(false)
+  
+  // Who performed the action (the commenter)
+  actorName   String
+  
+  // The owner of the snippet
+  userId      String
+  user        User     @relation("ReceivedNotifications", fields: [userId], references: [id])
+  
+  // Link to the snippet for redirection
+  snippetId   Int
+  snippet     Snippet  @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+}
 
 
 
