@@ -8,67 +8,67 @@ datasource db {
 }
 
 
-
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String         // Added for security
+  snippets      Snippet[]
+  comments      Comment[]      
+  notifications Notification[]
+  
+  following     Follow[]       @relation("Following")
+  followers     Follow[]       @relation("Followers")
+}
 
 model Snippet {
-  id        Int       @id @default(autoincrement())
-  title     String
-  code      String
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  comments  Comment[]
-  notifications Notification[]
+  id            Int            @id @default(autoincrement())
+  title         String
+  code          String
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  comments      Comment[]
+  notifications Notification[] 
 }
 
 model Comment {
-  id        String    @id @default(cuid())
-  content   String
-  createdAt DateTime  @default(now())
-  
+  id        Int      @id @default(autoincrement())
+  text      String
   snippetId Int
-  snippet   Snippet   @relation(fields: [snippetId], references: [id], onDelete: Cascade)
-  
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  parentId  Int?
+  createdAt DateTime @default(now())
 
-  // Self-relation for Nested Replies
-  parentId  String?
-  parent    Comment?  @relation("ReplyToComment", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Comment[] @relation("ReplyToComment")
+  snippet   Snippet  @relation(fields: [snippetId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
 }
 
-model User {
-  id       String    @id @default(cuid())
-  email    String    @unique
-  name     String?
-  password String?   // <--- Make sure this line exists
-  snippets Snippet[]
-  comments Comment[]
-  notifications Notification[] @relation("ReceivedNotifications")
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  status      String   @default("PENDING") 
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("Following", fields: [followerId], references: [id])
+  following   User     @relation("Followers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
 }
-
-
-
 
 model Notification {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  isRead      Boolean  @default(false)
+  id         String   @id @default(cuid())
+  userId     String   
+  actorName  String   
+  type       String   @default("COMMENT") 
+  snippetId  Int?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
   
-  // Who performed the action (the commenter)
-  actorName   String
-  
-  // The owner of the snippet
-  userId      String
-  user        User     @relation("ReceivedNotifications", fields: [userId], references: [id])
-  
-  // Link to the snippet for redirection
-  snippetId   Int
-  snippet     Snippet  @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id])
+  snippet    Snippet? @relation(fields: [snippetId], references: [id])
 }
-
-
-
-
 
 

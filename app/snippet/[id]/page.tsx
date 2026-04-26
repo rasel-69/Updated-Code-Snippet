@@ -1,14 +1,12 @@
-
-
 import CommentForm from '@/components/CommentForm'
 import CommentItem from '@/components/CommentItem'
 import DeleteSnippetButton from '@/components/DeleteSnippetButton'
+import FollowButton from '@/components/FollowButton'
 import { Button } from '@/components/ui/button'
 import prisma from '@/lib/db'
 import { ArrowLeft } from 'lucide-react'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import React from 'react'
 
 const SnippetDetailPage = async ({
   params,
@@ -17,9 +15,9 @@ const SnippetDetailPage = async ({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string; userId?: string }>;
 }) => {
-
   const id = parseInt((await params).id);
   const { from, userId } = await searchParams;
+
   const cookieStore = await cookies();
   const userCookie = cookieStore.get("user");
   let loggedInUser = userCookie ? JSON.parse(userCookie.value) : null;
@@ -28,8 +26,16 @@ const SnippetDetailPage = async ({
     where: { id },
     include: {
       comments: {
-        where: { parentId: null }, // Fetch only top-level
-        include: { user: true, replies: { include: { user: true } } },
+        where: { parentId: null },
+        include: { 
+          user: true, 
+          replies: { 
+            include: { 
+              user: true,
+              replies: { include: { user: true } }
+            } 
+          } 
+        },
         orderBy: { createdAt: 'desc' }
       }
     }
@@ -38,15 +44,17 @@ const SnippetDetailPage = async ({
   if (!snippet) return <h1>Not found</h1>;
   const isOwner = loggedInUser && loggedInUser.id === snippet.userId;
 
+  // Check if already following
+  const existingFollow = loggedInUser ? await prisma.follow.findUnique({
+    where: {
+      followerId_followingId: { followerId: loggedInUser.id, followingId: snippet.userId }
+    }
+  }) : null;
 
-  // Dynamic back path logic
-  const backPath = (from === 'profile' && userId) 
-    ? `/profile/${userId}` 
-    : "/";
+  const backPath = (from === 'profile' && userId) ? `/profile/${userId}` : "/";
 
   return (
-    <div className='container mx-auto'>
-
+    <div className='container mx-auto '>
       <Button variant="ghost" asChild className="mb-8 text-orange-500">
         <Link href={backPath}>
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -55,69 +63,56 @@ const SnippetDetailPage = async ({
       </Button>
 
       <div className='flex items-center justify-between'>
-        <h1 className='text-2xl font-semibold'>{snippet.title}</h1>
 
-        {
-          isOwner && (
-            <div className='flex flex-row gap-4'>
-              <Link href={`/snippet/${snippet.id}/edit`}>
-                <Button className='bg-gray-600 hover:bg-green-400 transition-colors duration-200'> Edit</Button>
-              </Link>
+          <h1 className='text-2xl font-semibold'>{snippet.title}</h1>
+          <div>
+            {loggedInUser && !isOwner && (
+            <FollowButton
+              followerId={loggedInUser.id}
+              followingId={snippet.userId}
+              initialIsFollowing={!!existingFollow}
+            />
+          )}
+          </div>
 
-              <DeleteSnippetButton id={snippet.id} />
 
-            </div>
-          )
-        }
-
+        {isOwner && (
+          <div className='flex gap-4'>
+            <Link href={`/snippet/${snippet.id}/edit`}>
+              <Button className='bg-gray-600 hover:bg-green-400'>Edit</Button>
+            </Link>
+            <DeleteSnippetButton id={snippet.id} />
+          </div>
+        )}
       </div>
 
-
-      <pre className='bg-gray-200 border-gray-400 rounded p-6 mt-6 h-96 overflow-y-auto'>
-        <code className="block">
-          {snippet.code}
-        </code>
+      <pre className='bg-gray-200 rounded p-6 mt-6 h-96 overflow-y-auto no-select'>
+        <code>{snippet.code}</code>
       </pre>
 
-
-
-
       <section id="comments" className="mt-12">
-        <h2 className="text-xl font-bold mb-4">Comments</h2>
-        {loggedInUser ? <CommentForm snippetId={snippet.id} /> : <p>Login to comment</p>}
+    
+          <h2 className="text-xl font-bold">Comments</h2>
 
-        <div className="mt-8 flex flex-col gap-8">
-          {snippet.comments.map((comment) => (
-            <div key={comment.id} className="border-l-4 border-orange-200 pl-4 py-2">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-orange-600">{comment.user.name}</span>
-                <span className="text-xs text-gray-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
-              </div>
+        {loggedInUser ? <CommentForm snippetId={snippet.id} /> : <p className="text-gray-500 mt-4">Please login to join the conversation.</p>}
 
-              <CommentItem comment={comment} snippetId={snippet.id} currentUserId={loggedInUser?.id} />
-
-              {/* Reply Form */}
-              {loggedInUser && <CommentForm snippetId={snippet.id} parentId={comment.id} placeholder="Reply..." />}
-
-              {/* Replies List */}
-              <div className="ml-8 mt-4 flex flex-col gap-4">
-                {comment.replies.map((reply) => (
-                  <div key={reply.id} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-sm">{reply.user.name}</span>
-                    </div>
-                    <CommentItem comment={reply} snippetId={snippet.id} currentUserId={loggedInUser?.id} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="mt-8 space-y-6">
+          {snippet.comments.length > 0 ? (
+            snippet.comments.map((comment) => (
+              <CommentItem 
+                key={comment.id} 
+                comment={comment} 
+                snippetId={snippet.id}
+                currentUserId={loggedInUser?.id}
+                snippetOwnerId={snippet.userId}
+              />
+            ))
+          ) : (
+            <p className="text-gray-400 italic">No comments yet. Be the first to share your thoughts!</p>
+          )}
         </div>
       </section>
-
-
     </div>
   )
 }
-
 export default SnippetDetailPage
