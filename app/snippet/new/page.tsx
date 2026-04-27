@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import hljs from 'highlight.js'
 import { createSnippetAction } from '@/lib/snippet-action' // our server action
 import { useSearchParams } from 'next/navigation';
 
-const CreateSnippetPage = () => {
+const CreateSnippetForm = () => {
     const [error, setError] = useState("");
     const [isPending, setIsPending] = useState(false);
 
@@ -94,6 +94,14 @@ const CreateSnippetPage = () => {
         </div>
     )
 
+}
+
+const CreateSnippetPage = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <CreateSnippetForm />
+        </Suspense>
+    );
 }
 
 export default CreateSnippetPage

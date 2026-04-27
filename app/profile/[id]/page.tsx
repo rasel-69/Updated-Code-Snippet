@@ -19,13 +19,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     const profileUser = await prisma.user.findUnique({
         where: { id },
         include: {
-            snippets: {
-                orderBy: { id: 'desc' }
-            },
+            snippets: { orderBy: { id: 'desc' } },
             _count: {
-                select: { 
-                    followers: { where: { status: "ACCEPTED" } }, // Only show accepted
-                    following: { where: { status: "ACCEPTED" } } 
+                select: {
+                    // Remove the "where" filter if you want to show pending follows immediately
+                    followers: true,
+                    following: true
                 }
             }
         }
@@ -61,10 +60,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
                             {/* Follow Button for Profile Header (Only if not own profile) */}
                             {!isOwnProfile && (
-                                <FollowButton 
-                                    followerId={loggedInUser.id} 
-                                    followingId={profileUser.id} 
-                                    initialIsFollowing={!!existingFollow} 
+                                <FollowButton
+                                    followerId={loggedInUser.id}
+                                    followingId={profileUser.id}
+                                    initialIsFollowing={!!existingFollow}
                                 />
                             )}
                         </div>
