@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import CommentForm from '@/components/CommentForm'
 import CommentItem from '@/components/CommentItem'
 import DeleteSnippetButton from '@/components/DeleteSnippetButton'

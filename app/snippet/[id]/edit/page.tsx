@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import EditSnippetForm from '@/components/EditSnippetForm'
 import prisma from '@/lib/db'
 import { cookies } from 'next/headers'

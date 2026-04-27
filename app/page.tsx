@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import NotificationBell from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/db";
