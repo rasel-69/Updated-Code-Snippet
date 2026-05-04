@@ -70,7 +70,7 @@ const CreateSnippetForm = () => {
                 <input type="hidden" name="from" value={from || ""} />
                 <input type="hidden" name="userId" value={userId || ""} />
                 <div>
-                    <Label className='mb-2 text-xl'>Title</Label>
+                    <Label className='mb-2 text-xl'>Put your title here</Label>
                     <Input type="text" id="title" name="title" required />
                 </div>
 
